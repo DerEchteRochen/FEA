@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Fahrtenbuch Pro</title>
     <style>
-        /* Light Mode Variablen (Standard) */
+        /* Light Mode */
         :root {
             --bg-color: #f2f2f7;
             --bg-gradient: linear-gradient(135deg, #f6f8fd 0%, #f1f5f9 100%);
@@ -19,12 +19,13 @@
             --primary-glow: rgba(0, 122, 255, 0.3);
             --success: #34c759;
             --danger: #ff3b30;
+            --warning: #ff9500;
             --border: rgba(0, 0, 0, 0.08);
             --nav-bg: rgba(255, 255, 255, 0.85);
             --item-bg: rgba(255, 255, 255, 0.9);
         }
 
-        /* Dark Mode Variablen (aktiviert sich automatisch nach Systemeinstellung) */
+        /* Dark Mode */
         @media (prefers-color-scheme: dark) {
             :root {
                 --bg-color: #000000;
@@ -37,6 +38,7 @@
                 --primary-glow: rgba(10, 132, 255, 0.4);
                 --success: #32d74b;
                 --danger: #ff453a;
+                --warning: #ff9f0a;
                 --border: rgba(255, 255, 255, 0.1);
                 --nav-bg: rgba(28, 28, 30, 0.85);
                 --item-bg: rgba(44, 44, 46, 0.9);
@@ -44,28 +46,18 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: var(--bg-gradient);
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            min-height: 100vh;
-            padding: env(safe-area-inset-top) 16px calc(90px + env(safe-area-inset-bottom)) 16px;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-gradient); background-color: var(--bg-color); color: var(--text-main);
+            margin: 0; min-height: 100vh; padding: env(safe-area-inset-top) 16px calc(90px + env(safe-area-inset-bottom)) 16px;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Animationen */
         .view { display: none; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.4); }
-            70% { box-shadow: 0 0 0 12px rgba(52, 199, 89, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); }
-        }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(52,199,89,0.4); } 70% { box-shadow: 0 0 0 12px rgba(52,199,89,0); } 100% { box-shadow: 0 0 0 0 rgba(52,199,89,0); } }
 
-        /* Header */
         .header { display: flex; justify-content: space-between; align-items: center; padding: 25px 0 15px 0; }
         h1 { margin: 0; font-size: 32px; font-weight: 800; letter-spacing: -0.5px; }
         
@@ -76,143 +68,108 @@
         }
         .btn-icon:active { transform: scale(0.92); }
 
-        /* Modern Glassmorphism Cards */
         .card {
-            background: var(--card-bg); 
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--card-border);
-            border-radius: 24px; padding: 24px;
-            margin-bottom: 24px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+            background: var(--card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border); border-radius: 24px; padding: 24px;
+            margin-bottom: 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.05);
         }
 
-        /* Status & Adressen */
         .status-badge {
             display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 20px;
-            font-size: 13px; font-weight: 700; background: var(--border);
-            color: var(--text-muted); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px;
+            font-size: 13px; font-weight: 700; background: var(--border); color: var(--text-muted);
+            margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px;
         }
-        .status-badge.active { 
-            background: rgba(52, 199, 89, 0.15); color: var(--success); 
-            animation: pulse 2s infinite; border: 1px solid rgba(52, 199, 89, 0.3);
-        }
+        .status-badge.active { background: rgba(52,199,89,0.15); color: var(--success); animation: pulse 2s infinite; border: 1px solid rgba(52,199,89,0.3); }
         
         .address-box { font-size: 15px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
         .address-box strong { color: var(--text-main); font-weight: 600; }
 
-        /* Steuerung (Start/Stopp) */
         .controls { display: flex; gap: 12px; }
         button.action-btn {
             flex: 1; padding: 18px; font-size: 17px; font-weight: 700; border: none;
-            border-radius: 18px; color: white; cursor: pointer; transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+            border-radius: 18px; color: white; cursor: pointer; transition: all 0.2s cubic-bezier(0.25,1,0.5,1);
         }
         button.action-btn:active:not(:disabled) { transform: scale(0.94); }
         button.action-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: scale(1); box-shadow: none !important; }
-        .btn-start { background-color: var(--success); box-shadow: 0 6px 16px rgba(52, 199, 89, 0.3); }
-        .btn-stop { background-color: var(--danger); box-shadow: 0 6px 16px rgba(255, 59, 48, 0.3); }
+        .btn-start { background-color: var(--success); box-shadow: 0 6px 16px rgba(52,199,89,0.3); }
+        .btn-stop { background-color: var(--danger); box-shadow: 0 6px 16px rgba(255,59,48,0.3); }
+        
+        /* Neue Buttons für Backup */
+        .btn-backup { background-color: var(--primary); box-shadow: 0 4px 12px var(--primary-glow); width: 100%; margin-bottom: 10px; }
+        .btn-import { background-color: var(--warning); box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3); width: 100%; }
 
-        /* Dropdowns */
         .selection-group { display: none; margin-bottom: 20px; }
         select {
-            width: 100%; padding: 14px 16px; border-radius: 14px;
-            border: 1px solid var(--border); font-size: 16px; background: var(--item-bg); color: var(--text-main);
-            -webkit-appearance: none; font-weight: 500; outline: none; margin-bottom: 12px;
+            width: 100%; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--border);
+            font-size: 16px; background: var(--item-bg); color: var(--text-main); -webkit-appearance: none;
+            font-weight: 500; outline: none; margin-bottom: 12px;
         }
         select:last-child { margin-bottom: 0; }
 
-        /* Listen & Historie */
         .section-title { font-size: 22px; font-weight: 700; margin-bottom: 16px; letter-spacing: -0.3px; }
-        .month-header {
-            font-size: 13px; font-weight: 700; color: var(--text-muted);
-            margin: 30px 0 12px 5px; text-transform: uppercase; letter-spacing: 1px;
-        }
+        .month-header { font-size: 13px; font-weight: 700; color: var(--text-muted); margin: 30px 0 12px 5px; text-transform: uppercase; letter-spacing: 1px; }
 
         .log-item {
-            background: var(--item-bg); border-radius: 18px; padding: 18px;
-            margin-bottom: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
-            border: 1px solid var(--card-border); position: relative;
+            background: var(--item-bg); border-radius: 18px; padding: 18px; margin-bottom: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid var(--card-border); position: relative;
         }
         .log-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; }
         .log-type { font-weight: 700; font-size: 14px; color: var(--primary); background: var(--primary-glow); padding: 4px 10px; border-radius: 8px;}
         .log-dist { font-weight: 800; font-size: 19px; }
         .log-details { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
         .log-details strong { color: var(--text-main); font-weight: 600; }
-        
         .delete-btn { 
-            background: rgba(255, 59, 48, 0.1); border: none; color: var(--danger); 
-            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 14px; cursor: pointer; position: absolute; right: 14px; bottom: 14px; transition: transform 0.2s;
+            background: rgba(255,59,48,0.1); border: none; color: var(--danger); width: 32px; height: 32px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px;
+            cursor: pointer; position: absolute; right: 14px; bottom: 14px; transition: transform 0.2s;
         }
         .delete-btn:active { transform: scale(0.85); }
-        
         .loader { display: none; font-size: 13px; font-weight: 600; color: var(--primary); margin-top: 15px; text-align: center; }
 
-        /* Stats Widget mit schickem Verlauf */
-        .stats-widget {
-            background: linear-gradient(135deg, #007aff, #00c6ff);
-            color: white; border-radius: 24px; padding: 24px; margin-bottom: 24px;
-            text-align: center; box-shadow: 0 10px 20px var(--primary-glow); border: 1px solid rgba(255,255,255,0.2);
-        }
+        .kw-selector { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+        .kw-btn { background: var(--item-bg); border: 1px solid var(--border); border-radius: 12px; width: 44px; height: 44px; font-size: 20px; font-weight: bold; color: var(--text-main); cursor: pointer; }
+        .kw-btn:active { transform: scale(0.9); }
+        .kw-display { font-size: 20px; font-weight: 800; color: var(--text-main); }
+        
+        .weekly-card { background: var(--item-bg); border-radius: 16px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); }
+        .weekly-date { font-size: 15px; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+        .weekly-route { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .weekly-info { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+        .weekly-dist-badge { display: inline-block; background: var(--primary-glow); color: var(--primary); font-weight: 800; font-size: 14px; padding: 4px 10px; border-radius: 8px; }
+
+        .stats-widget { background: linear-gradient(135deg, #007aff, #00c6ff); color: white; border-radius: 24px; padding: 24px; margin-bottom: 24px; text-align: center; box-shadow: 0 10px 20px var(--primary-glow); border: 1px solid rgba(255,255,255,0.2); }
         .stats-val { font-size: 38px; font-weight: 800; margin-top: 5px; letter-spacing: -1px; }
 
-        /* Todo Liste (Modernisiert) */
         .todo-input-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        .todo-input-group input {
-            flex: 1; padding: 14px 16px; border: 1px solid var(--border); color: var(--text-main);
-            border-radius: 14px; font-size: 16px; background: var(--item-bg); outline: none;
-        }
-        .todo-input-group input:focus { border-color: var(--primary); }
-        .todo-input-group button {
-            background: var(--primary); color: white; border: none; width: 50px;
-            border-radius: 14px; font-weight: bold; font-size: 24px; cursor: pointer;
-            box-shadow: 0 4px 10px var(--primary-glow);
-        }
-
+        .todo-input-group input { flex: 1; padding: 14px 16px; border: 1px solid var(--border); color: var(--text-main); border-radius: 14px; font-size: 16px; background: var(--item-bg); outline: none; }
+        .todo-input-group button { background: var(--primary); color: white; border: none; width: 50px; border-radius: 14px; font-weight: bold; font-size: 24px; cursor: pointer; box-shadow: 0 4px 10px var(--primary-glow); }
         .todo-list { list-style: none; padding: 0; margin: 0; }
-        .todo-item {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 14px 0; border-bottom: 1px solid var(--border);
-        }
+        .todo-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); }
         .todo-item:last-child { border-bottom: none; }
         .todo-label { flex: 1; margin-left: 14px; font-size: 16px; font-weight: 500; transition: 0.2s; }
         .todo-item.done .todo-label { text-decoration: line-through; color: var(--text-muted); opacity: 0.6; }
-        
-        .checkbox { 
-            width: 24px; height: 24px; border-radius: 8px; border: 2px solid var(--primary); 
-            cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
-        }
+        .checkbox { width: 24px; height: 24px; border-radius: 8px; border: 2px solid var(--primary); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .todo-item.done .checkbox { background: var(--primary); }
         .todo-item.done .checkbox::after { content: "✓"; color: white; font-size: 14px; font-weight: bold;}
-        
         .todo-del { background: none; border:none; color: var(--text-muted); font-size: 20px; padding: 5px; }
 
-        /* Textarea */
-        textarea {
-            width: 100%; box-sizing: border-box; min-height: 180px; padding: 16px;
-            border: 1px solid var(--border); border-radius: 16px; font-size: 16px; color: var(--text-main);
-            font-family: inherit; resize: none; background: var(--item-bg); line-height: 1.6; outline: none;
-        }
-        textarea:focus { border-color: var(--primary); }
+        textarea { width: 100%; box-sizing: border-box; min-height: 180px; padding: 16px; border: 1px solid var(--border); border-radius: 16px; font-size: 16px; color: var(--text-main); font-family: inherit; resize: none; background: var(--item-bg); line-height: 1.6; outline: none; }
 
-        /* Floating Bottom Navigation */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0;
             background: var(--nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border-top: 1px solid var(--card-border);
-            display: flex; justify-content: space-around;
-            padding: 12px 0 calc(12px + env(safe-area-inset-bottom)) 0;
+            display: flex; justify-content: space-between;
+            padding: 12px 10px calc(12px + env(safe-area-inset-bottom)) 10px;
             z-index: 100; box-shadow: 0 -4px 20px rgba(0,0,0,0.03);
         }
         .nav-item {
-            text-align: center; color: var(--text-muted); cursor: pointer;
-            flex: 1; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-            transition: color 0.2s;
+            text-align: center; color: var(--text-muted); cursor: pointer; flex: 1;
+            font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; transition: color 0.2s;
         }
         .nav-item.active { color: var(--primary); }
-        .nav-icon { 
-            font-size: 24px; display: block; margin-bottom: 4px; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
+        .nav-icon { font-size: 24px; display: block; margin-bottom: 4px; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .nav-item.active .nav-icon { transform: scale(1.15); }
-
     </style>
 </head>
 <body>
@@ -221,7 +178,6 @@
     <div id="view-fahrten" class="view active">
         <div class="header">
             <h1>Fahrten</h1>
-            <button class="btn-icon" onclick="exportCSV()">Export ⬇</button>
         </div>
 
         <div class="card">
@@ -232,7 +188,6 @@
                 <strong>Startzeit:</strong> <span id="startTimeText"></span>
             </div>
 
-            <!-- NEU: Gruppierte Auswahl für Fahrtzweck und Fahrzeug -->
             <div id="selectionGroup" class="selection-group">
                 <select id="tripType">
                     <option value="Dienstfahrt">🏢 Dienstfahrt</option>
@@ -252,19 +207,55 @@
             <div id="loader" class="loader">📍 Standort wird ermittelt...</div>
         </div>
 
-        <div class="section-title">Letzte Fahrten</div>
+        <div class="section-title">Verlauf</div>
         <div id="logList"></div>
     </div>
 
-    <!-- VIEW 2: NOTIZEN & AUFGABEN -->
+    <!-- VIEW 2: WOCHENZETTEL -->
+    <div id="view-woche" class="view">
+        <div class="header">
+            <h1>Wochenzettel</h1>
+            <button class="btn-icon" onclick="shareWeekly()">Teilen ➦</button>
+        </div>
+
+        <div class="card">
+            <div class="kw-selector">
+                <button class="kw-btn" onclick="changeWeek(-1)">◀</button>
+                <div id="kwDisplay" class="kw-display">KW 34</div>
+                <button class="kw-btn" onclick="changeWeek(1)">▶</button>
+            </div>
+            
+            <div style="text-align: center; margin: 20px 0;">
+                <div style="font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Gefahrene Strecke</div>
+                <div id="weeklyTotalKm" style="font-size: 34px; font-weight: 800; color: var(--primary); letter-spacing: -1px;">0.00 km</div>
+            </div>
+
+            <div id="weeklyListContainer" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <!-- VIEW 3: DASHBOARD & BACKUP (NEU) -->
     <div id="view-notizen" class="view">
         <div class="header">
             <h1>Dashboard</h1>
         </div>
 
         <div class="stats-widget">
-            <div style="font-size: 14px; opacity: 0.9; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Gesamte Strecke</div>
+            <div style="font-size: 14px; opacity: 0.9; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Gesamt seit Start</div>
             <div class="stats-val"><span id="totalKm">0.00</span> km</div>
+        </div>
+
+        <!-- NEU: Geräte-Sync / Backup -->
+        <div class="card">
+            <div class="section-title">Geräte-Sync (Backup)</div>
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px; line-height: 1.5;">
+                Sichere deinen Stand oder übertrage ihn auf ein anderes Gerät (z.B. iPad).
+            </p>
+            <button class="action-btn btn-backup" onclick="exportBackup()">📤 Daten sichern (Export)</button>
+            <button class="action-btn btn-import" onclick="triggerImport()">📥 Daten laden (Import)</button>
+            
+            <!-- Unsichtbarer Dateiauswähler für den Import -->
+            <input type="file" id="backupInput" accept=".json" style="display: none;">
         </div>
 
         <div class="card">
@@ -288,18 +279,25 @@
             <span class="nav-icon">🚗</span>
             Fahrten
         </div>
+        <div class="nav-item" onclick="switchTab('woche', this)">
+            <span class="nav-icon">📅</span>
+            Woche
+        </div>
         <div class="nav-item" onclick="switchTab('notizen', this)">
-            <span class="nav-icon">📊</span>
+            <span class="nav-icon">⚙️</span>
             Dashboard
         </div>
     </div>
 
     <script>
+        // Tab Navigation
         function switchTab(tabId, element) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById('view-' + tabId).classList.add('active');
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             element.classList.add('active');
+            
+            if(tabId === 'woche') renderWeeklyView();
         }
 
         let currentTrip = JSON.parse(localStorage.getItem('currentTrip'));
@@ -312,14 +310,35 @@
         const activeTripData = document.getElementById('activeTripData');
         const startAddressText = document.getElementById('startAddressText');
         const startTimeText = document.getElementById('startTimeText');
-        const selectionGroup = document.getElementById('selectionGroup'); // Referenz auf neue Gruppe
+        const selectionGroup = document.getElementById('selectionGroup');
         const tripType = document.getElementById('tripType');
-        const carType = document.getElementById('carType'); // Referenz auf neues Dropdown
+        const carType = document.getElementById('carType');
         const logList = document.getElementById('logList');
         const loader = document.getElementById('loader');
         const totalKmDisplay = document.getElementById('totalKm');
+        const notesArea = document.getElementById('notesArea');
 
         const monthNames = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+        const weekDays = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+
+        function getISOWeek(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+        }
+
+        function parseDateString(dateStr) {
+            try {
+                const d = dateStr.split(',')[0].trim().split('.');
+                return new Date(d[2], d[1] - 1, d[0]);
+            } catch(e) {
+                return new Date();
+            }
+        }
+
+        let currentSelectedKW = getISOWeek(new Date());
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371; 
@@ -365,7 +384,7 @@
             let currentMonthGroup = "";
             
             if(logs.length === 0) {
-                logList.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding: 20px; font-weight:500;">Keine Fahrten gespeichert.</div>';
+                logList.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding: 20px; font-weight:500;">Noch keine Fahrten aufgezeichnet.</div>';
             }
 
             logs.forEach((log, index) => {
@@ -380,7 +399,6 @@
                     currentMonthGroup = logMonthGroup;
                 }
 
-                // Checkt, ob ein Auto angegeben wurde (für alte Einträge)
                 const carInfo = log.car ? ` &bull; ${log.car}` : '';
 
                 const div = document.createElement('div');
@@ -406,7 +424,7 @@
             if (currentTrip) {
                 startBtn.disabled = true;
                 stopBtn.disabled = false;
-                selectionGroup.style.display = 'block'; // Zeigt beide Menüs
+                selectionGroup.style.display = 'block';
                 activeTripData.style.display = 'block';
                 statusBadge.innerText = "Fahrt läuft";
                 statusBadge.className = "status-badge active";
@@ -415,13 +433,188 @@
             } else {
                 startBtn.disabled = false;
                 stopBtn.disabled = true;
-                selectionGroup.style.display = 'none'; // Versteckt beide Menüs
+                selectionGroup.style.display = 'none';
                 activeTripData.style.display = 'none';
                 statusBadge.innerText = "Bereit";
                 statusBadge.className = "status-badge";
             }
         }
 
+        // Wochen-Logik
+        function changeWeek(offset) {
+            currentSelectedKW += offset;
+            if(currentSelectedKW > 52) currentSelectedKW = 1;
+            if(currentSelectedKW < 1) currentSelectedKW = 52;
+            renderWeeklyView();
+        }
+
+        function formatTime(dateTimeStr) {
+            if(dateTimeStr.includes(',')) {
+                let time = dateTimeStr.split(',')[1].trim();
+                return time.length > 5 ? time.substring(0, 5) : time;
+            }
+            return dateTimeStr;
+        }
+
+        function generateWeeklyContent() {
+            let weeklyLogs = [];
+            let weeklyTotal = 0;
+            const sortedLogs = [...logs].reverse();
+            sortedLogs.forEach(log => {
+                const logDate = parseDateString(log.startTime);
+                if (getISOWeek(logDate) === currentSelectedKW) {
+                    weeklyLogs.push({ log: log, dateObj: logDate });
+                    weeklyTotal += parseFloat(log.distance);
+                }
+            });
+            return { logs: weeklyLogs, total: weeklyTotal };
+        }
+
+        function renderWeeklyView() {
+            document.getElementById('kwDisplay').innerText = `KW ${currentSelectedKW}`;
+            const container = document.getElementById('weeklyListContainer');
+            container.innerHTML = '';
+            
+            const data = generateWeeklyContent();
+            document.getElementById('weeklyTotalKm').innerText = data.total.toFixed(2) + ' km';
+
+            if (data.logs.length === 0) {
+                container.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding: 20px;">Keine Fahrten in dieser Woche gefunden.</div>';
+                return;
+            }
+
+            data.logs.forEach(item => {
+                const l = item.log;
+                const d = item.dateObj;
+                const dateStr = `${weekDays[d.getDay()]}, ${l.startTime.split(',')[0]}`;
+                const carStr = l.car || "Unbekannt";
+                
+                const div = document.createElement('div');
+                div.className = 'weekly-card';
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <div class="weekly-date">${dateStr}</div>
+                            <div class="weekly-route">Von ${l.startAddress}</div>
+                            <div class="weekly-route">Nach ${l.stopAddress}</div>
+                            <div class="weekly-info">${carStr} &bull; ${l.type}</div>
+                            <div class="weekly-info">🕒 ${formatTime(l.startTime)} - ${formatTime(l.stopTime)} Uhr</div>
+                        </div>
+                        <div class="weekly-dist-badge">${l.distance} km</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        window.shareWeekly = async function() {
+            const data = generateWeeklyContent();
+            if(data.logs.length === 0) { alert("Es gibt keine Fahrten in dieser Woche zum Teilen."); return; }
+
+            let txtContent = `Fahrtenzettel - Kalenderwoche ${currentSelectedKW}\n`;
+            txtContent += `=================================================\n\n`;
+
+            data.logs.forEach(item => {
+                const l = item.log;
+                const d = item.dateObj;
+                txtContent += `Datum:       ${weekDays[d.getDay()]}, ${l.startTime.split(',')[0].trim()}\n`;
+                txtContent += `Fahrzeug:    ${l.car || "Unbekannt"} (${l.type})\n`;
+                txtContent += `Strecke:     Von ${l.startAddress}\n             Nach ${l.stopAddress}\n`;
+                txtContent += `Uhrzeit:     ${formatTime(l.startTime)} - ${formatTime(l.stopTime)} Uhr\n`;
+                txtContent += `Distanz:     ${l.distance} km\n`;
+                txtContent += `-------------------------------------------------\n`;
+            });
+            txtContent += `\nGesamte Fahrstrecke in KW ${currentSelectedKW}: ${data.total.toFixed(2)} km\n`;
+
+            const file = new File([txtContent], `Fahrtenzettel_KW${currentSelectedKW}.txt`, {type: "text/plain"});
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try { await navigator.share({ files: [file], title: `Fahrtenzettel KW ${currentSelectedKW}` }); } 
+                catch (error) {}
+            } else {
+                const url = URL.createObjectURL(file);
+                const link = document.createElement("a");
+                link.href = url; link.download = file.name;
+                document.body.appendChild(link); link.click();
+                document.body.removeChild(link); URL.revokeObjectURL(url);
+            }
+        }
+
+        // --- BACKUP & SYNC LOGIC (NEU) ---
+        window.exportBackup = async function() {
+            // Sammle alle Daten aus dem lokalen Speicher
+            const backupData = {
+                logs: JSON.parse(localStorage.getItem('fahrtenLogs') || '[]'),
+                todos: JSON.parse(localStorage.getItem('fahrtenTodos') || '[]'),
+                notes: localStorage.getItem('fahrtenNotes') || ''
+            };
+            
+            // Konvertiere zu JSON Format
+            const jsonStr = JSON.stringify(backupData, null, 2);
+            const dateStr = new Date().toISOString().slice(0,10);
+            const file = new File([jsonStr], `Fahrtenbuch_Backup_${dateStr}.json`, {type: "application/json"});
+
+            // Öffne das iOS Teilen-Menü (AirDrop, iCloud, etc.)
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: `Fahrtenbuch Backup`
+                    });
+                } catch (error) {
+                    console.log("Teilen abgebrochen", error);
+                }
+            } else {
+                // Fallback PC/Mac
+                const url = URL.createObjectURL(file);
+                const link = document.createElement("a");
+                link.href = url; link.download = file.name;
+                document.body.appendChild(link); link.click();
+                document.body.removeChild(link); URL.revokeObjectURL(url);
+            }
+        }
+
+        window.triggerImport = function() {
+            document.getElementById('backupInput').click();
+        }
+
+        document.getElementById('backupInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    // Frage zur Sicherheit nach
+                    if(confirm("Möchtest du diese Daten wirklich laden? Deine jetzigen Daten auf diesem Gerät werden dadurch überschrieben.")) {
+                        // Speichere in LocalStorage
+                        if(importedData.logs) localStorage.setItem('fahrtenLogs', JSON.stringify(importedData.logs));
+                        if(importedData.todos) localStorage.setItem('fahrtenTodos', JSON.stringify(importedData.todos));
+                        if(importedData.notes !== undefined) localStorage.setItem('fahrtenNotes', importedData.notes);
+                        
+                        // Aktualisiere Variablen im aktiven Code
+                        logs = importedData.logs || [];
+                        todos = importedData.todos || [];
+                        notesArea.value = importedData.notes || '';
+                        
+                        // Aktualisiere das Design
+                        updateUI();
+                        renderTodos();
+                        renderWeeklyView();
+                        
+                        alert("Daten erfolgreich wiederhergestellt!");
+                    }
+                } catch (error) {
+                    alert("Fehler beim Lesen der Datei. Bitte stelle sicher, dass es eine originale Fahrtenbuch Backup-Datei ist.");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset, damit man dieselbe Datei nochmal wählen kann
+        });
+
+
+        // GPS Tracker Logic
         const gpsOptions = { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 };
 
         startBtn.addEventListener('click', () => {
@@ -444,7 +637,7 @@
                 loader.style.display = 'none';
                 updateUI();
             }, error => {
-                alert("GPS Fehler! Bitte Standortdienste in iOS Einstellungen erlauben.");
+                alert("GPS Fehler! Bitte Standortdienste erlauben.");
                 loader.style.display = 'none';
                 startBtn.disabled = false;
             }, gpsOptions);
@@ -465,7 +658,7 @@
 
                 const logEntry = {
                     type: tripType.value,
-                    car: carType.value, // Speichert das ausgewählte Auto
+                    car: carType.value,
                     startTime: currentTrip.startTime, startAddress: currentTrip.startAddress,
                     stopTime: stopTime, stopAddress: stopAddress, distance: distance.toFixed(2)
                 };
@@ -478,6 +671,7 @@
 
                 loader.style.display = 'none';
                 updateUI();
+                renderWeeklyView();
             }, error => {
                 alert("GPS Fehler beim Stoppen!");
                 loader.style.display = 'none';
@@ -490,27 +684,11 @@
                 logs.splice(index, 1);
                 localStorage.setItem('fahrtenLogs', JSON.stringify(logs));
                 updateUI();
+                renderWeeklyView();
             }
         }
 
-        window.exportCSV = function() {
-            if(logs.length === 0) { alert("Keine Fahrten vorhanden."); return; }
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-            csvContent += "Art der Fahrt;Fahrzeug;Startzeit;Startort;Stoppzeit;Zielort;Distanz (km)\n"; // Neue Spalte hinzugefügt
-            logs.forEach(log => {
-                // Fallback, falls bei alten Einträgen kein Fahrzeug hinterlegt wurde
-                const car = log.car || "Unbekannt";
-                csvContent += `"${log.type}";"${car}";"${log.startTime}";"${log.startAddress}";"${log.stopTime}";"${log.stopAddress}";"${log.distance}"\n`;
-            });
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "Fahrtenbuch_Export.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
+        // Todo & Notizen Logic
         const todoList = document.getElementById('todoList');
         const todoInput = document.getElementById('todoInput');
 
@@ -553,12 +731,13 @@
             renderTodos();
         }
 
-        const notesArea = document.getElementById('notesArea');
         notesArea.value = localStorage.getItem('fahrtenNotes') || '';
         window.saveNotes = function() { localStorage.setItem('fahrtenNotes', notesArea.value); }
 
+        // Initiales Laden
         updateUI();
         renderTodos();
+        renderWeeklyView();
     </script>
 </body>
 </html>
