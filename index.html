@@ -84,6 +84,11 @@
         .log-details strong { color: var(--text-main); font-weight: 600; }
         .project-badge { display: inline-block; background: rgba(255, 183, 3, 0.15); color: var(--warning); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
         .route-info { display: inline-block; font-size: 10px; font-weight: 700; color: var(--success); border: 1px solid var(--success); padding: 3px 8px; border-radius: 6px; margin-top: 10px; margin-left: 5px; text-transform: uppercase; }
+        
+        /* NEU: Edit Button Style */
+        .edit-btn { background: rgba(0, 242, 254, 0.1); border: none; color: var(--primary); width: 36px; height: 36px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; position: absolute; right: 60px; bottom: 16px; transition: all 0.2s; }
+        .edit-btn:active { transform: scale(0.85); background: var(--primary); color: #000; }
+        
         .delete-btn { background: rgba(255, 42, 95, 0.1); border: none; color: var(--danger); width: 36px; height: 36px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; position: absolute; right: 16px; bottom: 16px; transition: all 0.2s; }
         .delete-btn:active { transform: scale(0.85); background: var(--danger); color: #fff; }
         
@@ -169,13 +174,24 @@
             <select id="manType"><option value="Dienstfahrt">🏢 Dienstfahrt</option><option value="Privatfahrt">🏠 Privatfahrt</option><option value="Arbeitsweg">🛣️ Arbeitsweg</option></select>
             <select id="manCar"><option value="Firmenauto">🚐 Firmenauto</option><option value="Privates Auto">🚗 Privates Auto</option></select>
             <select id="manProject"><option value="">Kein Projekt zugewiesen</option></select>
-            
-            <!-- NEU: Manuelles Notizfeld -->
             <input type="text" id="manNote" placeholder="Fahrt-Notiz (z.B. Kunde Maier)...">
 
             <div style="display:flex; gap:12px; margin-top:10px;">
                 <button class="action-btn" style="background:var(--item-bg); color:var(--text-main); border:1px solid var(--border);" onclick="closeManualModal()">Abbrechen</button>
                 <button class="action-btn" style="background:var(--primary-grad); color:#000;" onclick="saveManualTrip()">Speichern</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEU: NOTIZ BEARBEITEN MODAL -->
+    <div id="editNoteModal" class="modal-overlay">
+        <div class="modal-content card" style="padding: 24px;">
+            <h3 style="margin-top:0; color:var(--primary); font-size:22px; font-weight:800;">Notiz bearbeiten</h3>
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">Füge eine Notiz für diese Fahrt hinzu oder ändere eine bestehende.</p>
+            <input type="text" id="editNoteInput" placeholder="Fahrt-Notiz (z.B. Kunde Maier)...">
+            <div style="display:flex; gap:12px; margin-top:10px;">
+                <button class="action-btn" style="background:var(--item-bg); color:var(--text-main); border:1px solid var(--border);" onclick="closeEditNoteModal()">Abbrechen</button>
+                <button class="action-btn" style="background:var(--primary-grad); color:#000;" onclick="saveEditNote()">Speichern</button>
             </div>
         </div>
     </div>
@@ -204,8 +220,6 @@
                 <select id="projectSelect">
                     <option value="">Kein Projekt zugewiesen</option>
                 </select>
-                
-                <!-- NEU: Notizfeld für die Fahrt -->
                 <input type="text" id="tripNoteInput" class="trip-input" placeholder="Fahrt-Notiz (z.B. Kunde Maier)...">
             </div>
             
@@ -308,13 +322,13 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <script>
-        // --- Core Variables ---
         let currentTrip = JSON.parse(localStorage.getItem('currentTrip'));
         let logs = JSON.parse(localStorage.getItem('fahrtenLogs')) || [];
         let todos = JSON.parse(localStorage.getItem('fahrtenTodos')) || [];
         let savedPlaces = JSON.parse(localStorage.getItem('savedPlaces')) || {};
         let projects = JSON.parse(localStorage.getItem('fahrtenProjects')) || [];
         let timerInterval = null;
+        let currentEditLogIndex = null; // NEU: Merkt sich, welche Fahrt bearbeitet wird
         let map = null;
         let mapMarkers = [];
         let mapRoutingLine = null;
@@ -367,7 +381,6 @@
         function startLiveTimer() { if(timerInterval) clearInterval(timerInterval); liveTimerDisplay.style.display = 'block'; updateTimer(); timerInterval = setInterval(updateTimer, 1000); }
         function stopLiveTimer() { if(timerInterval) clearInterval(timerInterval); liveTimerDisplay.style.display = 'none'; }
 
-        // Speichert Änderungen an den Feldern während die Fahrt läuft in Echtzeit ab
         tripType.addEventListener('change', () => { if(currentTrip) { currentTrip.type = tripType.value; localStorage.setItem('currentTrip', JSON.stringify(currentTrip)); }});
         carType.addEventListener('change', () => { if(currentTrip) { currentTrip.car = carType.value; localStorage.setItem('currentTrip', JSON.stringify(currentTrip)); }});
         projectSelect.addEventListener('change', () => { if(currentTrip) { currentTrip.project = projectSelect.value; localStorage.setItem('currentTrip', JSON.stringify(currentTrip)); }});
@@ -403,22 +416,31 @@
                 if (logMonthGroup !== currentMonthGroup) { const header = document.createElement('div'); header.className = 'month-header'; header.innerText = logMonthGroup; logList.appendChild(header); currentMonthGroup = logMonthGroup; }
                 const carInfo = log.car ? ` &bull; ${log.car}` : '';
                 const projectBadge = log.project ? `<div class="project-badge">📁 ${log.project}</div>` : '';
-                const noteStr = log.note ? `<div style="color:var(--primary); font-size:13px; font-weight:600; margin-top:8px;">📝 ${log.note}</div>` : '';
+                
+                // NEU: Notizfeld in der Ansicht (Grau wenn leer, Blau wenn ausgefüllt)
+                const noteStr = log.note ? `<div style="color:var(--primary); font-weight:600; margin-top:8px; font-size:13px;">📝 ${log.note}</div>` : `<div style="color:var(--text-muted); font-weight:400; margin-top:8px; font-size:12px; font-style:italic;">Keine Notiz (Tippe ✏️ zum Hinzufügen)</div>`;
+                
                 const routeBadge = log.calcMethod === 'Route' ? '<span class="route-info">Route</span>' : (log.calcMethod === 'Manuell' ? '<span class="route-info" style="color:var(--warning); border-color:var(--warning);">Manuell</span>' : '<span class="route-info" style="color:var(--text-muted); border-color:var(--border);">Luft</span>');
+                
                 const div = document.createElement('div'); div.className = 'log-item';
-                div.innerHTML = `<div class="log-header"><span class="log-type">${log.type}${carInfo}</span><span class="log-dist">+ ${log.distance} km</span></div><div class="log-details"><strong>Von:</strong> ${log.startAddress} <br><em>${log.startTime}</em><br><br><strong>Nach:</strong> ${log.stopAddress} <br><em>${log.stopTime}</em><br>${projectBadge} ${routeBadge}${noteStr}</div><button class="delete-btn" onclick="deleteLog(${index})">✕</button>`;
+                div.innerHTML = `
+                    <div class="log-header"><span class="log-type">${log.type}${carInfo}</span><span class="log-dist">+ ${log.distance} km</span></div>
+                    <div class="log-details"><strong>Von:</strong> ${log.startAddress} <br><em>${log.startTime}</em><br><br><strong>Nach:</strong> ${log.stopAddress} <br><em>${log.stopTime}</em><br>${projectBadge} ${routeBadge}${noteStr}</div>
+                    
+                    <!-- NEU: Bearbeiten Button -->
+                    <button class="edit-btn" onclick="openEditNoteModal(${index})">✏️</button>
+                    <button class="delete-btn" onclick="deleteLog(${index})">✕</button>
+                `;
                 logList.appendChild(div);
             });
             totalKmDisplay.innerText = totalDist.toFixed(2);
             if (currentTrip) {
                 startBtn.disabled = true; stopBtn.disabled = false; selectionGroup.style.display = 'block'; activeTripData.style.display = 'block';
                 statusBadge.innerText = "Tracking Aktiv"; statusBadge.className = "status-badge active"; startAddressText.innerText = currentTrip.startAddress || "Wird geladen..."; startTimeText.innerText = currentTrip.startTime;
-                
                 if(currentTrip.type) tripType.value = currentTrip.type; 
                 if(currentTrip.car) carType.value = currentTrip.car; 
                 if(currentTrip.project) projectSelect.value = currentTrip.project; 
                 if(currentTrip.note) tripNoteInput.value = currentTrip.note; else tripNoteInput.value = "";
-                
                 startLiveTimer();
             } else {
                 startBtn.disabled = false; stopBtn.disabled = true; selectionGroup.style.display = 'none'; activeTripData.style.display = 'none';
@@ -437,6 +459,24 @@
             const dateStr = new Date(mDate).toLocaleDateString('de-DE'); 
             logs.push({ type: document.getElementById('manType').value, car: document.getElementById('manCar').value, project: document.getElementById('manProject').value, startTime: `${dateStr}, ${mStart}:00`, startAddress: mFrom, stopTime: `${dateStr}, ${mStop}:00`, stopAddress: mTo, distance: mDist.toFixed(2), calcMethod: 'Manuell', note: mNote });
             closeManualModal(); updateUI(); renderWeeklyView();
+        }
+
+        // --- NEU: Notiz Bearbeiten Logik ---
+        window.openEditNoteModal = function(index) {
+            currentEditLogIndex = index;
+            document.getElementById('editNoteInput').value = logs[index].note || "";
+            document.getElementById('editNoteModal').classList.add('show');
+        }
+        window.closeEditNoteModal = function() {
+            document.getElementById('editNoteModal').classList.remove('show');
+            currentEditLogIndex = null;
+        }
+        window.saveEditNote = function() {
+            if (currentEditLogIndex !== null) {
+                logs[currentEditLogIndex].note = document.getElementById('editNoteInput').value.trim();
+                localStorage.setItem('fahrtenLogs', JSON.stringify(logs));
+                closeEditNoteModal(); updateUI(); renderWeeklyView();
+            }
         }
 
         let currentSelectedKW = getISOWeek(new Date()); let currentSelectedYear = new Date().getFullYear();
